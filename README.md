@@ -1,12 +1,15 @@
-# We've Been Waiting
+# Fourteen Years Late
 
 ![make.fun](https://make.fun/badge/u-plucky-finch-20-one-line-one-laugh-0ffe66ea.svg)
 ![rank](https://make.fun/badge/u-plucky-finch-20-one-line-one-laugh-0ffe66ea/beeholde/u-plucky-finch-20-one-line-one-laugh-0ffe66ea/rank.svg)
 ![reward](https://make.fun/badge/u-plucky-finch-20-one-line-one-laugh-0ffe66ea/beeholde/u-plucky-finch-20-one-line-one-laugh-0ffe66ea/reward.svg)
 
-An entry for the [One Line, One Laugh](https://make.fun/bounty/u-plucky-finch-20-one-line-one-laugh-0ffe66ea) bounty on make.fun.
+This repository holds an entry for the
+[One Line, One Laugh](https://make.fun/bounty/u-plucky-finch-20-one-line-one-laugh-0ffe66ea)
+bounty.
 
-Running `main.py` checks one funny line against the gate rules
-(UTF-8, 1 to 200 characters, a single line, not only whitespace)
-and writes it to `/output/entry.txt`. Python 3 standard library
-only, no network, no inputs.
+`main.py` stores one short joke, confirms it obeys the bounty
+limits (UTF-8, between 1 and 200 characters, a single line, and
+not blank), and saves it as `/output/entry.txt`. The script uses
+only the Python 3 standard library and needs no input or network
+access.
