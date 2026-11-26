@@ -1,66 +1,64 @@
-"""Produce the one-line entry for the laugh bounty.
+"""Emit the single-line joke for the One Line, One Laugh bounty.
 
-The deliverable is a single sentence stored as UTF-8 bytes in
-``entry.txt``.  This module keeps the sentence in one place,
-sanity-checks it against the bounty limits, and writes it out
-without appending anything extra.
+The program keeps the joke in one constant, checks it against the
+bounty rules (UTF-8 text, 1 to 200 characters, one line, never
+blank), and stores the raw bytes as entry.txt inside the output
+folder. Nothing else is written.
 """
 
 import sys
 from pathlib import Path
 
-ENTRY_TEXT = (
-    "I returned a library book fourteen years late, "
-    "and the librarian whispered, \"We've been waiting.\""
+JOKE = (
+    "The plumber looked under my sink, went quiet, "
+    "and asked, \"Who hurt you?\""
 )
 
-DEFAULT_OUTPUT_DIR = Path("/output")
-ENTRY_FILENAME = "entry.txt"
-LOWER_LIMIT = 1
-UPPER_LIMIT = 200
+MIN_CHARS = 1
+MAX_CHARS = 200
+OUTPUT_NAME = "entry.txt"
+FALLBACK_DIR = Path("/output")
 
 
-def validate_sentence(sentence):
-    """Return the sentence unchanged, or raise if it breaks a rule."""
-    if not isinstance(sentence, str):
-        raise TypeError("the entry has to be a string")
-    if "\n" in sentence or "\r" in sentence:
-        raise ValueError("the entry has to fit on one line")
-    if sentence.strip() == "":
-        raise ValueError("the entry cannot be blank")
-    length = len(sentence)
-    if length < LOWER_LIMIT or length > UPPER_LIMIT:
-        raise ValueError("entry length %d is outside the allowed range" % length)
-    sentence.encode("utf-8")
-    return sentence
+def check_joke(text):
+    """Raise ValueError when the text breaks a bounty rule."""
+    if not isinstance(text, str):
+        raise ValueError("joke must be text")
+    if "\n" in text or "\r" in text:
+        raise ValueError("joke must stay on one line")
+    if not text.strip():
+        raise ValueError("joke must not be blank")
+    size = len(text)
+    if size < MIN_CHARS or size > MAX_CHARS:
+        raise ValueError("joke length %d is out of range" % size)
+    text.encode("utf-8")
+    return text
 
 
-def resolve_output_dir(argv):
-    """Use the first CLI argument as the output folder when given."""
-    if len(argv) > 1:
-        return Path(argv[1])
-    return DEFAULT_OUTPUT_DIR
+def pick_folder(argv):
+    """First argument wins; otherwise fall back to /output."""
+    return Path(argv[1]) if len(argv) > 1 else FALLBACK_DIR
 
 
-def emit_entry(output_dir):
-    """Persist the checked sentence and report the destination plus size."""
-    payload = validate_sentence(ENTRY_TEXT).encode("utf-8")
-    output_dir.mkdir(parents=True, exist_ok=True)
-    destination = output_dir / ENTRY_FILENAME
-    destination.write_bytes(payload)
-    return destination, len(payload)
+def store(folder):
+    """Write the checked joke bytes and report where they landed."""
+    data = check_joke(JOKE).encode("utf-8")
+    folder.mkdir(parents=True, exist_ok=True)
+    target = folder / OUTPUT_NAME
+    target.write_bytes(data)
+    return target, len(data)
 
 
-def run(argv=None):
-    arguments = sys.argv if argv is None else argv
+def main(argv=None):
+    args = sys.argv if argv is None else argv
     try:
-        destination, byte_count = emit_entry(resolve_output_dir(arguments))
-    except (TypeError, ValueError) as error:
-        print("entry rejected: %s" % error, file=sys.stderr)
+        target, count = store(pick_folder(args))
+    except ValueError as err:
+        print("rejected: %s" % err, file=sys.stderr)
         return 1
-    print("entry written: %s (%d bytes)" % (destination, byte_count))
+    print("wrote %s (%d bytes)" % (target, count))
     return 0
 
 
 if __name__ == "__main__":
-    raise SystemExit(run())
+    raise SystemExit(main())
