@@ -1,62 +1,64 @@
-"""Emit the single-line joke for the One Line, One Laugh bounty.
+"""Deliver the single competition line as a plain text file.
 
-The program keeps the joke in one constant, checks it against the
-bounty rules (UTF-8 text, 1 to 200 characters, one line, never
-blank), and stores the raw bytes as entry.txt inside the output
-folder. Nothing else is written.
+Running this module writes one short joke into the chosen output
+folder under the name entry.txt. The bytes on disk are exactly the
+joke encoded as UTF-8, with no extra newline appended.
 """
 
 import sys
 from pathlib import Path
 
-JOKE = (
-    "The plumber looked under my sink, went quiet, "
-    "and asked, \"Who hurt you?\""
+# The joke is kept in two pieces so the spoken punchline stays
+# visually separate from the scene that sets it up.
+LINE = (
+    "The plumber looked under my sink, went quiet, and asked, "
+    '"Who hurt you?"'
 )
 
-MIN_CHARS = 1
-MAX_CHARS = 200
-OUTPUT_NAME = "entry.txt"
-FALLBACK_DIR = Path("/output")
+MIN_LENGTH = 1
+MAX_LENGTH = 200
 
 
-def check_joke(text):
-    """Raise ValueError when the text breaks a bounty rule."""
+def validate(text):
+    """Reject text that breaks the one-line competition rules."""
     if not isinstance(text, str):
-        raise ValueError("joke must be text")
+        raise ValueError("the line must be a string")
     if "\n" in text or "\r" in text:
-        raise ValueError("joke must stay on one line")
+        raise ValueError("the line must fit on a single line")
     if not text.strip():
-        raise ValueError("joke must not be blank")
-    size = len(text)
-    if size < MIN_CHARS or size > MAX_CHARS:
-        raise ValueError("joke length %d is out of range" % size)
+        raise ValueError("the line must not be blank")
+    length = len(text)
+    if length < MIN_LENGTH or length > MAX_LENGTH:
+        raise ValueError("line length %d is outside the allowed range" % length)
     text.encode("utf-8")
     return text
 
-
-def pick_folder(argv):
-    """First argument wins; otherwise fall back to /output."""
-    return Path(argv[1]) if len(argv) > 1 else FALLBACK_DIR
+FILE_NAME = "entry.txt"
+DEFAULT_FOLDER = Path("/output")
 
 
-def store(folder):
-    """Write the checked joke bytes and report where they landed."""
-    data = check_joke(JOKE).encode("utf-8")
+def output_folder(arguments):
+    """Return the folder given on the command line, else /output."""
+    if len(arguments) > 1:
+        return Path(arguments[1])
+    return DEFAULT_FOLDER
+
+
+def save_line(folder, text):
+    """Validate text, then store it as UTF-8 bytes in the folder."""
+    checked = validate(text)
     folder.mkdir(parents=True, exist_ok=True)
-    target = folder / OUTPUT_NAME
-    target.write_bytes(data)
-    return target, len(data)
+    path = folder / FILE_NAME
+    payload = checked.encode("utf-8")
+    path.write_bytes(payload)
+    return path, len(payload)
 
 
-def main(argv=None):
-    args = sys.argv if argv is None else argv
-    try:
-        target, count = store(pick_folder(args))
-    except ValueError as err:
-        print("rejected: %s" % err, file=sys.stderr)
-        return 1
-    print("wrote %s (%d bytes)" % (target, count))
+def main(arguments=None):
+    """Entry point: save the line and report the result."""
+    args = sys.argv if arguments is None else arguments
+    path, size = save_line(output_folder(args), LINE)
+    print("saved %s (%d bytes)" % (path, size))
     return 0
 
 
